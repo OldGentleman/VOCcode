@@ -7,12 +7,16 @@ xml(xml==9|xml==10|xml==13)=[];
 function [res,ind]=parse(xml,ind,parent)
 
 res=[];
+xml=strrep(xml,'  ','');
+xml=strrep(xml,' verified="no"','');
 if ~isempty(parent)&&xml(ind)~='<'
     i=findchar(xml,ind,'<');
     res=trim(xml(ind:i-1));
     ind=i;
     [tag,ind]=gettag(xml,i);
     if ~strcmp(tag,['/' parent])
+        tag,parent
+        xml
         error('<%s> closed with <%s>',parent,tag);
     end
 else
@@ -70,6 +74,9 @@ elseif xml(ind)=='<'
     tag=xml(ind+1:i-1);
     ind=i+1;
 else
+    xml
+    xml(ind)
+    ind
     error('expected tag');
 end 
 

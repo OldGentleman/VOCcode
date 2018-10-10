@@ -12,7 +12,7 @@ clss = {'Insulator';
 'Windproof_wire_ring';
 'Insulator_base';
 'Isoelectric_line'};
-% clss = {'Brace_sleeve_screw'};
+clss = {'Brace_sleeve_screw'};
 clssname = {'Insulator';
 'Rotary\_double\_ear';
 'Binaural\_sleeve';
@@ -24,7 +24,7 @@ clssname = {'Insulator';
 'Windproof\_wire\_ring';
 'Insulator\_base';
 'Isoelectric\_line'};
-%clssname = {'Brace\_sleeve\_screw'};
+clssname = {'Brace\_sleeve\_screw'};
 draw = true;
 VOCopts = VOCinit();
 aplist=zeros(length(clss),1);
@@ -33,7 +33,7 @@ dos(['chmod -R 777 *'])
 
 
 for clsn=1:length(clss)
-    clsn=1;
+    %clsn=1;
     cls = clss{clsn};
     % load test set
     fid = fopen(sprintf(VOCopts.imgsetpath,VOCopts.testset),'r');
@@ -45,7 +45,7 @@ for clsn=1:length(clss)
     gt(length(gtids))=struct('BB',[],'diff',[],'det',[]);
     for i=1:length(gtids)
         % display progress
-        if toc>1
+        if toc>2
             fprintf('%s: pr: load: %d/%d\n',cls,i,length(gtids));
             drawnow;
             tic;
@@ -136,40 +136,47 @@ VOCopts.detrespath
             fp(d)=1;                    % false positive  对于同一个gt,找到多个目标,则后续目标设为fp
         end
     end
-
+    
     % compute precision/recall
     fp=cumsum(fp);
     tp=cumsum(tp);
     rec=tp/npos;
     prec=tp./(fp+tp);
-    
+    fn=npos-tp;
+    tn=nd-tp-fp-fn;
     % compute average precision
-
-    ap=0;
+    TPR = tp./(tp+fn);
+    FPR = fp./(fp+tn);
+    ACC = (tp+tn)/nd;
+    AUC=0;
     for t=0:0.01:1  % THRESH *
-        p=max(prec(rec>=t));  % dayu yuzhide prec
+        p=max(TPR(rec>=t));  % dayu yuzhide prec
         if isempty(p)
             p=0;
         end
-        ap=ap+p/110; % average precision
+        AUC=AUC+p/110; % area under curve
     end
-
-    if draw
-        % plot precision/recall
-        h = figure,
-        plot(rec,prec,'-');
-        grid;
-        xlabel 'recall'
-        ylabel 'precision'
-        title(sprintf('class: %s, subset: %s, AP = %.3f',clssname{clsn},VOCopts.testset,ap));
-        saveas(h,strcat('output/',cls,'P-R.jpg'))
+    
+     if draw
+         % plot precision/recall
+         h = figure,
+        plot(FPR,TPR,'-');
+        hold on
+        
+        plot([FPR(1),1],[TPR(1),max(TPR)],'--')
+        grid on;
+        xlabel 'false positive rate'
+        ylabel 'true positive rate'
+        axis([0,1,0,1])
+        title(sprintf('class: %s, AUC = %.3f',clssname{clsn},AUC));
+        saveas(h,strcat('output/',cls,'ROC.jpg'))
     end
 
     % record average precision
-    aplist(clsn) = ap;
-    save(sprintf('output/%s_P-R.mat',cls),'rec','prec','ap');
-end  
-map = sum(aplist)/length(clss)
-save('output/map.mat','map');
+    aplist(clsn) = AUC;
+    save(sprintf('output/%s_ROC.mat',cls),'FPR','TPR','ACC','AUC');
+end
+mAUC = sum(aplist)/length(clss)
+save('output/mAUC.mat','mAUC');
 dos('cd output/')
 dos('chmod -R 777 *')

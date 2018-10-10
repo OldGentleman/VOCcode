@@ -42,7 +42,8 @@ VOCopts.imgsetpath=[VOCopts.datadir VOCopts.dataset '/ImageSets/Main/%s.txt'];
 VOCopts.clsimgsetpath=[VOCopts.datadir VOCopts.dataset '/ImageSets/Main/%s_%s.txt'];
 VOCopts.clsrespath=[VOCopts.resdir 'Main/%s_cls_' VOCopts.testset '_%s.txt'];
 VOCopts.detrespath=[VOCopts.resdir 'Main/%s_det_' VOCopts.testset '_%s.txt'];
-VOCopts.detrespath=[VOCopts.resdir '%s.txt'];
+VOCopts.detrespath=[VOCopts.resdir 'yolo_courvelet/%s.txt'];
+%VOCopts.detrespath=[VOCopts.resdir '%s.txt'];
 % initialize segmentation task paths
 
 VOCopts.seg.clsimgpath=[VOCopts.datadir VOCopts.dataset '/SegmentationClass/%s.png'];
